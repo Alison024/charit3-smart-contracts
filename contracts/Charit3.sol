@@ -39,6 +39,7 @@ contract Charit3 is Ownable {
         uint256 usd,
         uint256 eth
     );
+    event Withdrawed(uint256 indexed id, uint256 usd, uint256 eth);
     uint256 public constant PRECISION = 1 ether;
     uint256 public constant USD_DECIMALS = 6;
     address ethUsdcPriceFeed;
@@ -47,8 +48,10 @@ contract Charit3 is Ownable {
     mapping(uint256 => Fundraise) public fundraises;
     // creator address => id of Fundraise
     mapping(address => EnumerableSet.UintSet) private _creatorFundraises;
-    constructor(address _ethUsdcPriceFeed) Ownable(msg.sender) {
-        if (_ethUsdcPriceFeed == address(0)) revert ZeroAddress();
+    constructor(address _ethUsdcPriceFeed, address _usdc) Ownable(msg.sender) {
+        if (_ethUsdcPriceFeed == address(0) || _usdc == address(0))
+            revert ZeroAddress();
+        usdc = _usdc;
         ethUsdcPriceFeed = _ethUsdcPriceFeed;
     }
 
@@ -103,6 +106,11 @@ contract Charit3 is Ownable {
         if (fundraise.usdcBalance != 0)
             IERC20(usdc).safeTransfer(msg.sender, fundraise.usdcBalance);
         fundraises[_fundraiseId].finished = true;
+        emit Withdrawed(
+            _fundraiseId,
+            fundraise.usdcBalance,
+            fundraise.ethBalance
+        );
     }
 
     function getCreatorFundraises(
@@ -143,7 +151,7 @@ contract Charit3 is Ownable {
         address payable _recipient,
         uint256 _amount
     ) internal {
-        if (address(this).balance >= _amount) revert NotEnoughEth();
+        if (address(this).balance > _amount) revert NotEnoughEth();
         (bool sent, ) = _recipient.call{value: _amount}("");
         if (!sent) revert EthTransferError();
     }
