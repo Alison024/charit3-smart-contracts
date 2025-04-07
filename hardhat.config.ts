@@ -1,6 +1,7 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import rpcs from "./rpcs.json";
+import { devPrivateKey, basescanApiKey } from "./secrets.json";
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
@@ -23,6 +24,26 @@ const config: HardhatUserConfig = {
         blockNumber: 28533496,
       },
     },
+    base: {
+      url: rpcs.base,
+      chainId: 8453,
+      accounts: [devPrivateKey],
+    },
+  },
+  etherscan: {
+    apiKey: {
+      base: basescanApiKey,
+    },
+    customChains: [
+      {
+        network: "base",
+        chainId: 8453,
+        urls: {
+          apiURL: "https://api.basescan.org/api",
+          browserURL: "https://basescan.org",
+        },
+      },
+    ],
   },
 };
 
